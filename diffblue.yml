@@ -1,0 +1,413 @@
+buildCmd: sh ./gradlew build
+testCmd: true
+lineLength: 4096
+skipVerification: true
+cbmcArguments:
+  # Do not generate coverage comments on generated tests.
+  java-generate-no-comments: true
+  # Constrain the size of arrays created in the analyzed code.
+  java-max-vla-length: 100000
+phases:
+  -
+    #Phase 0 PRETTY, SIMPLE and SMART - pretty tests, do not test private methods directly, Smart-Harness
+    timeout: 180
+    cbmcArguments:
+      # Use simple models first containers (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [ private ]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # Instrument the file as opposed to the function only
+      cover-only: file
+      # Set string input value  
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Instantiate classes using the simplest constructor strategy 
+      smart-harness: simplest-constructor-and-nondet
+  -
+    #Phase 1 PRETTY AND COMPLEX - standard models only, pretty tests, do not test private methods directly, input factory
+    timeout: 180
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Set string input value  
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 2
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [ private ]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+      # Limit input factory recursive depth (default 0 = no recursion allowed)
+      java-test-input-factory-bmc-recursion-limit: 4
+  -
+    #Phase 2 FIFO Strategy - pretty tests, do not test private methods directly, fifo
+    timeout: 100
+    cbmcArguments:
+      # Use the standard models library
+      classpath: '/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Add constraint that strings are printable
+      max-nondet-string-length: 100
+      # Explores the program tree breadth-first.
+      paths: fifo
+      # Set string input value  
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: false
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [ private ]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    #Phase 3 Exceptions - do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: false
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 30
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [ private ]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+  -
+    #Phase 4 Direct testing - test private methods directly, increased reflection
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 1500
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 10
+      # Bound the length of input strings.
+      max-nondet-string-length: 10
+      # Add constraint that strings are printable
+      string-printable: true
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: false
+      # Set an upper bound on loop unwinding.
+      unwind: 1
+      # Set string input value  
+      string-input-value: ["foo", "Bar", "BAZ", "1234", "1a 2b 3c", "A1B2C3", "a,b,c", "1", "2", "3", "a/b/c", "a'b'c", ",", "/", "'"]
+      # If the logs contain output of the following then proceed to phase X
+    nextPhase:
+      # If the function is not analysable then do not pass onto the next phase
+      not_analyzed: null
+  -
+    #PHASE 5 Mocking - aggressive mocking, do not test private methods directly
+    timeout: 180
+    cbmcArguments:
+      # Use simple models containers first (ArrayList, HashMap, HashSet,...) will have a maximum size of one.
+      classpath: '/tools/cbmc/models-simple-overlay.jar:/tools/cbmc/models.jar:.'
+      # Set a limit on the number of instructions that can be generated as part of a test trace.
+      depth: 3000
+      # never initialize reference-typed parameter to the entry point with null
+      java-assume-inputs-non-null: true
+      # Only load the class (and related inner/outer classes) containing the method under test,
+      load-containing-class-only: true
+      # Maximum allowed length for an array passed as test input.
+      max-nondet-array-length: 30
+      # Bound the length of input strings.
+      max-nondet-string-length: 100
+      # Add constraint that strings are printable
+      string-printable: false
+      # Make implicit runtime exceptions explicit.
+      throw-runtime-exceptions: true
+      # Set an upper bound on loop unwinding.
+      unwind: 3
+      # Do not test any methods that have the specified access level.
+      do-not-test-methods-with-access: [ private ]
+      # Instrument the entry point function only.
+      cover-function-only: false
+      # instrument the file as opposed to the function only
+      cover-only: file
+units:
+ - target:
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/TypePage.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/TypePage.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/util/matcher/DescriptorMatcher.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/util/matcher/DescriptorMatcher.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/API.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/API.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/RoundMarkErrorStrip$Marker.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/RoundMarkErrorStrip.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/util/matcher/DescriptorMatcher$CharBuffer.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/util/matcher/DescriptorMatcher.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/model/Type.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/model/Type.java
+   - dir: services/build/classes/java/main
+     file: org/fife/ui/rtextarea/Marker.class
+     sourceDir: services/src/main/java
+     sourceFile: org/fife/ui/rtextarea/Marker.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/util/exception/ExceptionUtil.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/util/exception/ExceptionUtil.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/RoundMarkErrorStrip$Listener.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/RoundMarkErrorStrip.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/HyperlinkPage$HyperlinkData.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/HyperlinkPage.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/model/Type$Field.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/model/Type.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/RoundMarkErrorStrip$MarkedOccurrenceNotice.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/RoundMarkErrorStrip.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/HyperlinkPage.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/HyperlinkPage.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/model/Indexes.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/model/Indexes.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/HyperlinkPage$1.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/HyperlinkPage.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/TypePage$ReferenceData.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/TypePage.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/RoundMarkErrorStrip.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/RoundMarkErrorStrip.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/util/index/IndexesUtil.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/util/index/IndexesUtil.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/model/Container$Entry.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/model/Container.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/spi/TypeFactory.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/spi/TypeFactory.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/TextPage.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/TextPage.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/AbstractTextPage.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/AbstractTextPage.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/model/Container.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/model/Container.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/TypePage$DeclarationData.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/TypePage.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/CustomLineNumbersPage.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/CustomLineNumbersPage.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/AbstractTextPage$1.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/AbstractTextPage.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/model/Type$Method.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/model/Type.java
+ - target:
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/util/matcher/DescriptorMatcher.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/util/matcher/DescriptorMatcher.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/util/matcher/DescriptorMatcher$CharBuffer.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/util/matcher/DescriptorMatcher.java
+ - target:
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/MainView.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/MainView.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/component/IconButton.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/component/IconButton.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/API.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/API.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/feature/PageChangeable.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/feature/PageChangeable.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/util/swing/SwingUtil.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/util/swing/SwingUtil.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/model/history/History.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/model/history/History.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/MainView$3.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/MainView.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/component/panel/TabbedPanel$2.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/component/panel/TabbedPanel.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/feature/UriOpenable.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/feature/UriOpenable.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/util/exception/ExceptionUtil.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/util/exception/ExceptionUtil.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/MainView$2.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/MainView.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/MainView$1.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/MainView.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/component/panel/TabbedPanel.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/component/panel/TabbedPanel.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/component/panel/TabbedPanel$1.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/component/panel/TabbedPanel.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/model/configuration/Configuration.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/model/configuration/Configuration.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/feature/PageClosable.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/feature/PageClosable.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/feature/PreferencesChangeListener.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/feature/PreferencesChangeListener.java
+   - dir: api/build/classes/java/main
+     file: org/jd/gui/api/feature/UriGettable.class
+     sourceDir: api/src/main/java
+     sourceFile: org/jd/gui/api/feature/UriGettable.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/component/panel/TabbedPanel$3.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/component/panel/TabbedPanel.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/util/swing/SwingUtil$1.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/util/swing/SwingUtil.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/service/platform/PlatformService.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/service/platform/PlatformService.java
+   - dir: app/build/classes/java/main
+     file: org/jd/gui/view/component/panel/MainTabbedPanel.class
+     sourceDir: app/src/main/java
+     sourceFile: org/jd/gui/view/component/panel/MainTabbedPanel.java
+ - target:
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/AbstractTextPage.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/AbstractTextPage.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/util/exception/ExceptionUtil.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/util/exception/ExceptionUtil.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/RoundMarkErrorStrip.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/RoundMarkErrorStrip.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/RoundMarkErrorStrip$Marker.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/RoundMarkErrorStrip.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/RoundMarkErrorStrip$Listener.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/RoundMarkErrorStrip.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/AbstractTextPage$1.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/AbstractTextPage.java
+   - dir: services/build/classes/java/main
+     file: org/jd/gui/view/component/RoundMarkErrorStrip$MarkedOccurrenceNotice.class
+     sourceDir: services/src/main/java
+     sourceFile: org/jd/gui/view/component/RoundMarkErrorStrip.java
